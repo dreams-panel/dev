@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            background-color: rgba(5, 6, 3, 0.9);
+            background-image: url(https://images.unsplash.com/photo-1672009190560-12e7bade8d09?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D);
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Quicksand', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            color: white;
+            backdrop-filter: blur(15px);
+        }
+
+        .galaxy {
+            background-image: url(https://images.unsplash.com/photo-1637055159652-2b8837731f00?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D);
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+
+        .galaxy:before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            top: 98%;
+            width: 100%;
+            height: 40px;
+            backdrop-filter: blur(15px);
+        }
+
+        .content {
+            z-index: 1;
+            text-align: center;
+        }
+
+        .text-epic {
+            font-size: 6rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 100vh;
+            padding: 20px;
+        }
+
+        .card-r {
+            width: 500px;
+            height: 300px;
+            background-color: #0b0b0cea;
+            border-radius: 10px;
+            margin: 20px;
+            opacity: 0;
+            transform: translateX(-500px);
+            transition: opacity 2s ease, transform 4s ease;
+        }
+
+        .card-l {
+            width: 500px;
+            height: 300px;
+            background-color: #0b0b0cea;
+            border-radius: 10px;
+            margin: 20px;
+            opacity: 0;
+            transform: translateX(500px);
+            transition: opacity 2s ease, transform 4s ease;
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .card-content {
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        hr{
+            width: 250px;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dreams</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="galaxy" id="galaxy">
+        <div class="overlay"></div>
+        <div class="content">
+            <h1 class="text-6xl text-center text-epic">Welcome to Dreams</h1>
+            <button onclick="window.location.href='/login'" class="btn border hover:border-none hover:bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-500 hover:scale-105 transform transition duration-500 ease-in-out rounded-full py-3 px-6 shadow-lg text-2xl font-bold text-white mt-8" style="border-color: #ffffff; border-width: 1px;">
+                Begin your epic journey
+            </button>
+            
+            
+              
+              
+              
+              
+            <p class="scroll-indicator">Scroll down to explore</p>
+        </div>
+    </div>
+
+    <div class="card-container">
+        <div class="card-r card">
+            <div class="card-content">
+                <h2>Discover the Cosmos</h2>
+                <hr>
+                <p>Embark on a journey through the cosmos and explore the wonders of the universe. From distant galaxies to mysterious black holes, there's so much to discover and learn.</p>
+            </div>
+        </div>
+        <div class="card-l card">
+            <div class="card-content">
+                <h2>Unleash Your Imagination</h2>
+                <hr>
+                <p>Dreams are the gateway to infinite possibilities. Let your imagination soar as you delve into the depths of your mind. Anything is possible in the realm of dreams.</p>
+            </div>
+        </div>
+        <div class="card-r card">
+            <div class="card-content">
+                <h2>Embrace Adventure</h2>
+                <hr>
+                <p>Life is an adventure waiting to be embraced. Take risks, seek new experiences, and push the boundaries of what's possible. The journey is as important as the destination.</p>
+            </div>
+        </div>
+        
+    </div>
+    <script>
+
+window.onload = function() {
+    changeBackground();
+};
+
+function changeBackground() {
+    var galaxy = document.getElementById('galaxy');
+    var backgrounds = [
+        'https://images.unsplash.com/photo-1672009190560-12e7bade8d09?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'https://images.unsplash.com/photo-1637055159652-2b8837731f00?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+    ];
+    
+    var randomIndex = Math.floor(Math.random() * backgrounds.length);
+    var randomBg = backgrounds[randomIndex];
+    
+    galaxy.style.backgroundImage = 'url(' + randomBg + ')';
+}
+
+
+
+        window.addEventListener('scroll', function() {
+            var cards = document.querySelectorAll('.card');
+
+            cards.forEach(function(card) {
+                var positionFromTop = card.getBoundingClientRect().top;
+
+                if (positionFromTop - window.innerHeight <= 0) {
+                    card.classList.add('visible');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

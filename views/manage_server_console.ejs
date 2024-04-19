@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Console</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a202c;
+            font-family: 'Quicksand', sans-serif;
+        }
+        /* Stil für die maximale Höhe und den Scrollbalken */
+        .console-output {
+            max-height: 500px;
+            overflow-y: scroll;
+            white-space: pre-wrap; /* Um den Text bei Platzmangel umzubrechen */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto mt-4">
+
+        <nav class="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
+
+            <div>
+                <a href="#" class="text-white text-lg font-bold">Server Console</a>
+            </div>
+
+            <div class="flex items-center">
+                <span class="text-white mr-4"><i class="fas fa-wallet"></i> <%= balance %> <%= currency %></span>
+
+                <div class="flex items-center justify-center rounded-full h-8 w-8 mr-2 bg-blue-500 text-white">
+
+                    <% let initials = (username || '').match(/\b\w/g) || []; %>
+                    <% initials = ((initials.shift() || '') + (initials.pop() || '')).toUpperCase(); %>
+                    <span><%= initials %></span>
+                </div>
+
+                <span class="text-white mr-4"><%= username %></span>
+
+                <div class="relative">
+                    <button id="dropdownBtn"  class="text-white focus:outline-none">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414zM10 4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden">
+                        <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Profile</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Settings</a>
+                        <a href="../logout" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4" style="width: 80%;">
+            <h1 class="text-white text-lg font-bold mb-2">Server Console</h1>
+            <%= containerId %>
+            <div id="consoleOutput" class="console-output text-white"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script>
+
+        const socket = new WebSocket('ws://localhost:30001/console/11b9812d777796f387d836d7366fb289dfcd702eb39483d5bd32391741c44563');
+
+        socket.addEventListener('message', function (event) {
+            const consoleOutput = document.getElementById('consoleOutput');
+            consoleOutput.innerHTML += event.data + '<br>'; 
+            consoleOutput.scrollTop = consoleOutput.scrollHeight; 
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownBtn = document.getElementById('dropdownBtn');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            dropdownBtn.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', function(event) {
+                if (!dropdownMenu.contains(event.target) && !dropdownBtn.contains(event.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

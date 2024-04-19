@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "docker": "^1.0.0",
+    "dockerode": "^4.0.2",
+    "ejs": "^3.1.9",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "express-ws": "^5.0.2",
+    "request": "^2.88.2",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.16.0"
+  }
+}

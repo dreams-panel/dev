@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Management</title>
+    <!-- Hier können Sie zusätzliche Stile oder Skripte einfügen, die Sie benötigen -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a202c;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .container {
+            
+        }
+        .console {
+            border-radius: 6px;
+            background-color: #0000008c;
+            color: #fff;
+            padding: 1rem;
+            max-height: 550px;
+            height: 550px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            width: 1000px;
+        }
+        .card {
+            background-color: #374151;
+            color: #fff;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            margin-left: 20px;
+            width: 500px;
+            height: 150px;
+        }
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column; /* Ändern Sie die Ausrichtung auf vertikal */
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .console-container {
+            max-width: 1200px;
+        }
+        .cont {
+            display: flex;
+            justify-content: space-between; /* Ändern Sie die Ausrichtung auf horizontal */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto mt-4">
+        <h1 class="text-white text-2xl mb-4">Server Management</h1>
+            <!-- Start/Stop Button -->
+    <div class="container mx-auto mt-4 mb-4">
+        <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
+            <h2 class="text-white text-lg font-semibold mb-2"><%= server.name %></h2>
+            <div>
+                <button id="start" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Start</button>
+                <button id="stop" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded ml-3">Stop</button>
+            </div>
+        </div>          
+    </div>
+        <div class="cont">
+            <!-- Server Console -->
+            <div class="bg-gray-800 p-4 rounded-lg console-container">
+                <h2 class="text-white text-lg font-semibold mb-2">Server Console</h2>
+                <div class="console" id="console"></div>
+                <!-- Console Input -->
+                <div class="mt-4">
+                    <input type="text" id="commandInput" placeholder="Enter command..." class="bg-gray-700 text-white rounded px-3 py-2">
+                    <button id="sendCommandBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ml-3">Send Command</button>
+                </div>
+            </div>
+            <!-- Ressourcenkarten -->
+            <div class="container mx-auto mt-4 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
+                <!-- RAM Usage/Limit Card -->
+                <div class="card">
+                    <div class="card-header">RAM</div>
+                    <div class="card-content">
+                        <div>Usage: <span id="ramUsage"><%= resources.ramUsage %> MB</span></div>
+                        <div>Limit: <span id="ramLimit"><%= server.ram_mb %> MB</span></div>
+                    </div>
+                </div>
+                <!-- CPU Usage/Limit Card -->
+                <div class="card">
+                    <div class="card-header">CPU</div>
+                    <div class="card-content">
+                        <div>Usage: <span id="cpuUsage"><%= resources.cpuUsage %></span></div>
+                        <div>Limit: <span id="cpuLimit"><%= server.vcores %></span></div>
+                    </div>
+                </div>
+                <!-- Disk Usage/Limit Card -->
+                <div class="card">
+                    <div class="card-header">Disk</div>
+                    <div class="card-content">
+                        <div><span id="diskUsage"><%= resources.diskUsage %> MB</span><span id="diskLimit"> / <%= server.disk_mb %> MB</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <script>
+        // WebSocket für die Serverkonsole
+        const ws = new WebSocket(`ws://${window.location.host}/serverconsole/<%= server.container_id %>`);
+        const consoleElement = document.getElementById('console');
+
+        ws.onmessage = function(event) {
+            consoleElement.innerText += event.data;
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+
+        // WebSocket für die Ressourceninformationen
+        const resourcesWS = new WebSocket(`ws://${window.location.host}/api/resources`);
+
+        resourcesWS.onmessage = function(event) {
+            const resources = JSON.parse(event.data);
+            updateResourceCards(resources);
+        };
+
+        resourcesWS.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+
+        // Funktion zum Aktualisieren der Ressourcenkarten
+        function updateResourceCards(resources) {
+            const ramUsageElement = document.getElementById('ramUsage');
+            const ramLimitElement = document.getElementById('ramLimit');
+            const cpuUsageElement = document.getElementById('cpuUsage');
+            const cpuLimitElement = document.getElementById('cpuLimit');
+            const diskUsageElement = document.getElementById('diskUsage');
+            const diskLimitElement = document.getElementById('diskLimit');
+
+            ramUsageElement.textContent = resources[0].ramUsage + ' MB';
+            ramLimitElement.textContent = resources[0].ramLimit + ' MB';
+            cpuUsageElement.textContent = resources[1].cpuUsage;
+            cpuLimitElement.textContent = resources[1].cpuLimit;
+            diskUsageElement.textContent = resources[2].diskUsage + ' MB';
+            diskLimitElement.textContent = resources[2].diskLimit + ' MB';
+        }
+
+        // Start/Stop Button
+        const startStopButton = document.getElementById('startStopButton');
+        let isRunning = false;
+
+        startStopButton.addEventListener('click', function() {
+            if (isRunning) {
+                // Stopping the server
+                ws.send(JSON.stringify({ action: 'stop' }));
+                startStopButton.textContent = 'Start';
+            } else {
+                // Starting the server
+                ws.send(JSON.stringify({ action: 'start' }));
+                startStopButton.textContent = 'Stop';
+            }
+            isRunning = !isRunning;
+        });
+
+        // Send Command Button
+        const sendCommandBtn = document.getElementById('sendCommandBtn');
+        const commandInput = document.getElementById('commandInput');
+
+        sendCommandBtn.addEventListener('click', function() {
+            const command = commandInput.value.trim();
+            if (command !== '') {
+                ws.send(JSON.stringify({ action: 'command', command: command }));
+                commandInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>

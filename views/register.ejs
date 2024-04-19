@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a202c;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background-color: #2d3748;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            width: 400px;
+        }
+        .card-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .form-label {
+            color: #cbd5e0;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #4a5568;
+            background-color: #4a5568;
+            color: #cbd5e0;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+        .form-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #48bb78;
+            color: #ffffff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .form-btn:hover {
+            background-color: #38a169;
+        }
+        .form-btn:focus {
+            outline: none;
+        }
+        .illustration {
+            margin-left: 100px;
+            width: 400px;
+            height: auto;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 10px;
+            color: #cbd5e0;
+        }
+        .login-link a {
+            color: #48bb78;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Register</h2>
+            <form action="/register" method="post">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" required class="form-input">
+
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" required class="form-input">
+
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" required class="form-input">
+
+                <label for="confirm-password" class="form-label">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required class="form-input">
+
+                <button type="submit" class="form-btn">Register</button>
+            </form>
+            <div class="login-link">
+                <p>Already have an account? <a href="/login">Login here</a></p>
+            </div>
+        </div>
+        <img src="https://cdni.iconscout.com/illustration/premium/thumb/login-page-4468581-3783954.png?f=webp" alt="Illustration" class="illustration">
+    </div>
+</body>
+</html>

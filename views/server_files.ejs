@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Files</title>
+    <!-- Hier können Sie zusätzliche Stile oder Skripte einfügen, die Sie benötigen -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a202c;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .end {
+            background-color: rgba(128, 128, 128, 0.171);
+            padding: 5px;
+            border-radius: 5px;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .file {
+            margin-bottom: 10px;
+            border-radius: 5px;
+            padding: 3px;
+            position: relative;
+        }
+        .file-options {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 5px;
+            top: 25px;
+            right: 0;
+            display: none;
+        }
+        .file:hover .file-options {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto mt-4">
+        <h1 class="text-2xl font-semibold mb-4 text-white">Server Files</h1>
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <h2 class="text-lg font-semibold mb-2 text-white">Files in Server Directory</h2>
+            <div class="file-container">
+                <% if(files && files.length > 0) { %>
+                    <ul class="list-disc list-inside">
+                        <% 
+                            // Separate files into directories and other files
+                            const directories = [];
+                            const otherFiles = [];
+                            files.forEach(file => {
+                                const parts = file.split(/\s+/);
+                                if (parts.length >= 9) {
+                                    const isDirectory = parts[0].startsWith('d');
+                                    if (isDirectory) {
+                                        directories.push(file);
+                                    } else {
+                                        otherFiles.push(file);
+                                    }
+                                }
+                            });
+
+                            // Sort directories and other files alphabetically
+                            directories.sort();
+                            otherFiles.sort();
+
+                            // Concatenate directories and other files
+                            const sortedFiles = directories.concat(otherFiles);
+
+                            // Render the sorted files
+                            sortedFiles.forEach(file => {
+                                const parts = file.split(/\s+/);
+                                if (parts.length >= 9) {
+                                    const fileName = parts[parts.length - 1];
+                                    const fileExt = fileName.split('.').pop();
+                                    const isDirectory = parts[0].startsWith('d');
+                                    %>
+                                    <li class="text-white flex items-center bg-gray-700 file">
+                                        <% if (isDirectory) { %>
+                                            <i class="end fas fa-folder text-yellow-400 mr-2"></i>
+                                        <% } else if (fileExt === 'js') { %>
+                                            <i class="end fab fa-node-js text-yellow-400 mr-2"></i>
+                                        <% } else if (fileExt === 'html') { %>
+                                            <i class="end fab fa-html5 text-red-400 mr-2"></i>
+                                        <% } else if (fileExt === 'json') { %>
+                                            <i class="end fas fa-file-code text-blue-400 mr-2"></i>
+                                        <% } else if (fileExt === 'jar') { %>
+                                            <i class="end fas fa-archive text-purple-400 mr-2"></i>
+                                        <% } else if (fileExt === 'txt') { %>
+                                            <i class="end fa-solid fa-file-lines text-blue-300 mr-2"></i>
+                                        <% } else if (fileExt === 'env') { %>
+                                            <i class="end fa-solid fa-gear mr-2" style="color: #b1b1b1;"></i>
+                                        <% } else { %>
+                                            <i class="end fas fa-file text-gray-400 mr-2"></i>
+                                        <% } %>
+                                        <%= fileName %>
+                                        <div class="file-options">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                            <div class="hidden bg-white rounded-md shadow-lg mt-2 py-2 w-40">
+                                                <a href="#">Rename</a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <% 
+                                }
+                            });
+                        %>
+                    </ul>
+                <% } else { %>
+                    <p class="text-white">No files found.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>
