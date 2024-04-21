@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "connect-sqlite3": "^0.9.15",
     "docker": "^1.0.0",
     "dockerode": "^4.0.2",
     "ejs": "^3.1.9",

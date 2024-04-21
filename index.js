@@ -5,6 +5,7 @@ const ejs = require('ejs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const settings = require('./settings.json');
 const Docker = require('dockerode');
 const docker = new Docker();
@@ -46,6 +47,12 @@ function createTables() {
         container_id TEXT
     )`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS sessions (
+        sid TEXT PRIMARY KEY,
+        sess TEXT,
+        expire INTEGER
+    )`);
+
     console.log('Tabellen erstellt oder bereits vorhanden.');
 }
 
@@ -57,8 +64,15 @@ var expressWs = require('express-ws')(app);
 app.use(session({
     secret: 'geheimnis',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: new SQLiteStore({
+        db: 'database.db',
+        table: 'sessions',
+        dir: __dirname,
+        ttl: 3600
+    })
 }));
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -68,7 +82,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+const row = {
 
+}
 
 app.get('/', (req, res) => {
     res.render('index.ejs');
@@ -136,12 +152,8 @@ app.get('/dashboard', (req, res) => {
     }
 });
 
-app.get('/admin', (req, res) => {
-    if (req.session && req.session.userId && req.session.role === 1) {
+app.get('/admin', isAdmin, (req, res) => {
         res.render('admin/admin.ejs');
-    } else {
-        res.redirect('/login');
-    }
 })
 
 app.get('/freeserver', async (req, res) => {
@@ -764,7 +776,23 @@ function checkAndDeleteExpiredServers() {
 
 setInterval(checkAndDeleteExpiredServers, 1 * 60 * 60 * 1000);
 
-checkAndDeleteExpiredServers();
+setTimeout(checkAndDeleteExpiredServers, 20000);
+
+function isAdmin(req, res, next) {
+    const userId = req.session.userId;
+    db.get(`SELECT * FROM users WHERE id = ?`, [userId], (err, user) => {
+        if (err) {
+            console.error('Fehler beim Abrufen von Benutzerinformationen aus der Datenbank:', err);
+            res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+        } else {
+            if (user.role === 1) { // Annahme: 1 steht für Admin-Rolle
+                next(); // Benutzer ist ein Administrator
+            } else {
+                res.status(403).send('Sie haben keine Berechtigung für diese Aktion.'); // Benutzer ist kein Administrator
+            }
+        }
+    });
+}
 
 
 app.listen(3000, () => {
