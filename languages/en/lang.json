@@ -6,10 +6,10 @@
     "logout": "Abmelden",
     "name": "Name",
     "ram": "RAM (MB)",
-    "disk": "Festplatte (MB)",
+    "disk": "Disk Space (MB)",
     "vcores": "vCores",
-    "price": "Preis / Monat",
-    "expires_in": "Läuft ab in",
-    "manage": "Verwalten",
-    "claim_free_server": "Kostenlosen Server beanspruchen"
+    "price": "Price/per mounth",
+    "expires_in": "Express In",
+    "manage": "Manage",
+    "claim_free_server": "Claim Free Server"
 }
