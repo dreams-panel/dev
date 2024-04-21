@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ejs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title><%= lang.dashboard %></title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,7 +17,7 @@
     <div class="container mx-auto mt-4">
         <nav class="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
             <div>
-                <a href="#" class="text-white text-lg font-bold">Dashboard</a>
+                <a href="#" class="text-white text-lg font-bold"><%= lang.dashboard %></a>
             </div>
             <div class="flex items-center">
                 <span class="text-white mr-4"><i class="fas fa-wallet"></i> <%= balance %> <%= currency %></span>
@@ -34,55 +34,51 @@
                         </svg>
                     </button>
                     <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden">
-                        <a href="/profile" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Profile</a>
+                        <a href="/profile" class="block px-4 py-2 text-sm text-white hover:bg-gray-700"><%= lang.profile %></a>
                         <% if (role === 1) { %>
-
-                            <a href="/admin" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Admin</a>
+                            <a href="/admin" class="block px-4 py-2 text-sm text-white hover:bg-gray-700"><%= lang.admin %></a>
                         <% } %>
-                        <a href="../logout" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Logout</a>
+                        <a href="../logout" class="block px-4 py-2 text-sm text-white hover:bg-gray-700"><%= lang.logout %></a>
                     </div>
-
                 </div>
             </div>
         </nav>
-        <nav class="flex justify-between">
             <div class="bg-gray-800 p-4 rounded-lg mt-4">
-                <table class="table-auto w-full text-white">
-                    <thead>
+                <table class="w-full text-white border border-gray-300 overflow-hidden" style="border-radius: 10px 10px 10px;">
+                    <thead class="bg-gray-700 rounded-full">
                         <tr>
-                            <th class="px-4 py-2">Name</th>
-                            <th class="px-4 py-2">RAM (MB)</th>
-                            <th class="px-4 py-2">Disk (MB)</th>
-                            <th class="px-4 py-2">vCores</th>
-                            <th class="px-4 py-2">Price / Month</th>
-                            <th class="px-4 py-2">Expires In</th>
-                            <th class="px-4 py-2">Manage</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">Name</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">RAM (MB)</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">Disk (MB)</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">vCores</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">Price / Month</th>
+                            <th class="px-6 py-3 text-left text-xs leading-4 font-medium uppercase tracking-wider border-b-2 border-gray-500">Expires In</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-500"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (servers && servers.length > 0) { %>
                             <% servers.forEach(server => { %>
                                 <tr>
-                                    <td class="px-4 py-2"><%= server.name %></td>
-                                    <td class="px-4 py-2"><%= server.ram_mb %></td>
-                                    <td class="px-4 py-2"><%= server.disk_mb %></td>
-                                    <td class="px-4 py-2"><%= server.vcores %></td>
-                                    <td class="px-4 py-2">$<%= server.price_per_month %></td>
-                                    <td class="px-4 py-2"><%= calculateExpiration(server.expiry_timestamp) %></td>
-                                    <td class="px-4 py-2"><a href="/server/<%= server.id %>" class="hover:bg-blue-600 bg-blue-500 px-2 py-1 text-white rounded">Manage</a></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><%= server.name %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><%= server.ram_mb %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><%= server.disk_mb %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><%= server.vcores %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300">$<%= server.price_per_month %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><%= calculateExpiration(server.expiry_timestamp) %></td>
+                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300"><a href="/server/<%= server.id %>" class="hover:bg-blue-600 bg-blue-500 px-2 py-1 text-white rounded"><%= lang.manage %></a></td>
                                 </tr>
                             <% }); %>
                         <% } else { %>
                             <tr>
                                 <td colspan="7" class="px-4 py-2">
-                                    <a href="/freeserver" class="text-blue-500 hover:underline">Claim Free Server</a>
+                                    <a href="/freeserver" class="text-blue-500 hover:underline"><%= lang.claim_free_server %></a>
                                 </td>
                             </tr>
                         <% } %>
                     </tbody>
                 </table>
             </div>
-        </nav>
     </div>
     <% function calculateExpiration(expiryTimestamp) { %>
         <% const now = new Date(); %>

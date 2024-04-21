@@ -163,22 +163,6 @@
             diskLimitElement.textContent = resources[2].diskLimit + ' MB';
         }
 
-        // Start/Stop Button
-        const startStopButton = document.getElementById('startStopButton');
-        let isRunning = false;
-
-        startStopButton.addEventListener('click', function() {
-            if (isRunning) {
-                // Stopping the server
-                ws.send(JSON.stringify({ action: 'stop' }));
-                startStopButton.textContent = 'Start';
-            } else {
-                // Starting the server
-                ws.send(JSON.stringify({ action: 'start' }));
-                startStopButton.textContent = 'Stop';
-            }
-            isRunning = !isRunning;
-        });
 
         // Send Command Button
         const sendCommandBtn = document.getElementById('sendCommandBtn');
@@ -191,6 +175,31 @@
                 commandInput.value = '';
             }
         });
+
+
+document.getElementById("start").addEventListener("click", function() {
+    fetch('/server/start/<%= server.container_id %>/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+});
+
+document.getElementById("stop").addEventListener("click", function() {
+    fetch('/server/stop/<%= server.container_id %>/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+});
     </script>
 </body>
 </html>

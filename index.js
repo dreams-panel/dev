@@ -9,31 +9,45 @@ const settings = require('./settings.json');
 const Docker = require('dockerode');
 const docker = new Docker();
 const { exec } = require('child_process');
-const { performance } = require('perf_hooks');
+const { spawn } = require('child_process');
 
 const DB_PATH = path.join(__dirname, 'database.db');
-const db = new sqlite3.Database(DB_PATH);
 
-db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    password TEXT,
-    email TEXT,
-    balance REAL DEFAULT 0,
-    role INTEGER DEFAULT 3
-)`);
+const db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) {
+        console.error('Fehler beim Öffnen der SQLite-Datenbank:', err);
+    } else {
+        console.log('SQLite-Datenbank geöffnet oder erstellt.');
+        createTables();
+    }
+});
 
-db.run(`CREATE TABLE IF NOT EXISTS servers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    owner_id INTEGER,
-    ram_mb INTEGER,
-    disk_mb INTEGER,
-    vcores INTEGER,
-    price_per_month REAL,
-    expiry_timestamp INTEGER,
-    container_id TEXT
-)`);
+function createTables() {
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT,
+        email TEXT,
+        language TEXT,
+        last_login_timestamp INTEGER,
+        balance REAL DEFAULT 0,
+        role INTEGER DEFAULT 3
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS servers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        owner_id INTEGER,
+        ram_mb INTEGER,
+        disk_mb INTEGER,
+        vcores INTEGER,
+        price_per_month REAL,
+        expiry_timestamp INTEGER,
+        container_id TEXT
+    )`);
+
+    console.log('Tabellen erstellt oder bereits vorhanden.');
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +67,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+
 
 app.get('/', (req, res) => {
     res.render('index.ejs');
@@ -88,6 +104,18 @@ app.get('/dashboard', (req, res) => {
                     } else {
                         const balance = row.balance;
                         const role = row.role;
+
+                        // Sprachdatei basierend auf der vom Benutzer ausgewählten Sprache laden
+                        const langFilePath = path.join(__dirname, 'languages', row.language, 'lang.json');
+                        let langData;
+                        try {
+                            langData = require(langFilePath);
+                        } catch (error) {
+                            console.error('Fehler beim Laden der Sprachdatei:', error);
+                            // Verwende eine Standard-Sprachdatei, falls die gewünschte Sprache nicht gefunden wurde
+                            langData = require(path.join(__dirname, 'languages', 'en', 'lang.json'));
+                        }
+
                         res.render('dashboard.ejs', {
                             settings: settings,
                             currency: settings.currency,
@@ -96,7 +124,8 @@ app.get('/dashboard', (req, res) => {
                             email: row.email,
                             servers: servers,
                             balance: balance,
-                            role: role
+                            role: role,
+                            lang: langData
                         });
                     }
                 });
@@ -107,13 +136,21 @@ app.get('/dashboard', (req, res) => {
     }
 });
 
+app.get('/admin', (req, res) => {
+    if (req.session && req.session.userId && req.session.role === 1) {
+        res.render('admin/admin.ejs');
+    } else {
+        res.redirect('/login');
+    }
+})
+
 app.get('/freeserver', async (req, res) => {
     const serverName = 'free_minecraft_server_' + generateRandomString(8); 
-    const ramMb = 1024; 
-    const diskMb = 1024; 
-    const vCores = 2; 
+    const ramMb = 2024; 
+    const diskMb = 4024; 
+    const vCores = 4; 
     const pricePerMonth = 0; 
-    const expiryTimestamp = Date.now() + 30 * 24 * 60 * 60 * 1000; 
+    const expiryTimestamp = Date.now() + 1 * 2 * 6 * 6 * 1000; 
     const ownerId = req.session.userId;
 
     try {
@@ -164,59 +201,12 @@ function isContainerOwner(req, res, next) {
 
 
 
-async function startContainer(containerId) {
-    const container = docker.getContainer(containerId);
-    await container.start();
-}
 
-async function stopContainer(containerId) {
-    const container = docker.getContainer(containerId);
-    await container.stop();
-}
 
-app.post('/start/:serverId', (req, res) => {
-    const serverId = req.params.serverId;
-    db.get(`SELECT * FROM servers WHERE id = ?`, [serverId], async (err, server) => {
-        if (err) {
-            console.error('Fehler beim Abrufen von Serverinformationen aus der Datenbank:', err);
-            res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-        } else {
-            if (req.session.userId === server.owner_id) {
-                try {
-                    await startContainer(server.container_id);
-                    res.redirect('/dashboard');
-                } catch (error) {
-                    console.error('Fehler beim Starten des Containers:', error);
-                    res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-                }
-            } else {
-                res.redirect('/dashboard');
-            }
-        }
-    });
-});
 
-app.post('/stop/:serverId', (req, res) => {
-    const serverId = req.params.serverId;
-    db.get(`SELECT * FROM servers WHERE id = ?`, [serverId], async (err, server) => {
-        if (err) {
-            console.error('Fehler beim Abrufen von Serverinformationen aus der Datenbank:', err);
-            res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-        } else {
-            if (req.session.userId === server.owner_id) {
-                try {
-                    await stopContainer(server.container_id);
-                    res.redirect('/dashboard');
-                } catch (error) {
-                    console.error('Fehler beim Stoppen des Containers:', error);
-                    res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-                }
-            } else {
-                res.redirect('/dashboard');
-            }
-        }
-    });
-});
+
+
+
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -230,18 +220,36 @@ function generateRandomString(length) {
 async function createMinecraftServerContainer(serverName, ownerId, ramMb, diskMb, vCores) {
     return new Promise((resolve, reject) => {
         const memoryLimit = `${ramMb}M`;
-        const cpuShares = vCores * 1024; 
-        console.log(vCores)
-        exec(`docker run -d --name ${serverName} --memory=${memoryLimit} --cpu-shares=${cpuShares} --cpuset-cpus="0-${vCores - 1}" -e EULA=true -e DISK=${diskMb}G itzg/minecraft-server`, (error, stdout, stderr) => {
+        const cpuShares = vCores * 1024;
+        let port = 25565;
+        exec(`docker ps -a --format "{{.Names}}\t{{.Ports}}"`, (error, stdout, stderr) => {
             if (error) {
                 reject(error);
                 return;
             }
-            const containerId = stdout.trim(); 
-            resolve(containerId);
+            const containers = stdout.trim().split("\n");
+            containers.forEach(container => {
+                const [name, portsInfo] = container.split("\t");
+                const ports = portsInfo ? portsInfo.split(", ") : [];
+                if (ports.some(portInfo => portInfo.endsWith(`:${port}->${port}/tcp`))) {
+                    port++;
+                }
+            });
+            console.log(`Selected port: ${port}`);
+            exec(`docker run -d -it --name ${serverName} -p ${port}:25565 --memory=${memoryLimit} --cpu-shares=${cpuShares} --cpuset-cpus="0-${vCores - 1}" -e CREATE_CONSOLE_IN_PIPE=true -e EULA=true -e DISK=${diskMb}G itzg/minecraft-server`, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                const containerId = stdout.trim();
+                resolve(containerId);
+            });
         });
     });
 }
+
+
+
 
 app.ws('/api/resources', (ws, req) => {
     const interval = setInterval(async () => {
@@ -290,51 +298,93 @@ app.ws('/api/resources', (ws, req) => {
     });
 });
 
+const bcrypt = require('bcrypt');
+
 app.post('/register', (req, res) => {
-    const { username, email, password } = req.body;
-    db.get(`SELECT * FROM users WHERE username = ? OR email = ?`, [username, email], (err, row) => {
+    const { username, email, password, language } = req.body;
+    // Überprüfe, ob eine Sprache ausgewählt wurde, wenn nicht, setze standardmäßig 'en'
+    const selectedLanguage = language || 'en';
+
+    // Generiere ein Salt und verschlüssele das Passwort
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('Fehler beim Überprüfen der Benutzerdaten:', err);
-            res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-        } else if (row) {
-            res.send('Benutzername oder E-Mail-Adresse bereits registriert.');
-        } else {
-            db.run(`INSERT INTO users (username, email, password) VALUES (?, ?, ?)`, [username, email, password], function (err) {
+            console.error('Fehler beim Hashen des Passworts:', err);
+            return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+        }
+
+        db.get(`SELECT * FROM users WHERE username = ? OR email = ?`, [username, email], (err, row) => {
+            if (err) {
+                console.error('Fehler beim Überprüfen der Benutzerdaten:', err);
+                return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+            } 
+            if (row) {
+                return res.send('Benutzername oder E-Mail-Adresse bereits registriert.');
+            } 
+            
+            // Füge den Benutzer zur Datenbank hinzu
+            db.run(`INSERT INTO users (username, email, password, language) VALUES (?, ?, ?, ?)`, [username, email, hashedPassword, selectedLanguage], function (err) {
                 if (err) {
                     console.error('Fehler beim Hinzufügen des Benutzers zur Datenbank:', err);
-                    res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-                } else {
-                    const userId = this.lastID;
-                    req.session.userId = userId;
-                    const defaultRole = 3;
-                    db.run(`UPDATE users SET role = ? WHERE id = ?`, [defaultRole, userId], (err) => {
-                        if (err) {
-                            console.error('Fehler beim Festlegen der Standardrolle für den Benutzer:', err);
-                            res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-                        } else {
-                            res.redirect('/dashboard');
-                        }
-                    });
-                }
+                    return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+                } 
+                
+                const userId = this.lastID;
+                req.session.userId = userId;
+                const defaultRole = 3;
+                
+                // Setze die Standardrolle für den Benutzer
+                db.run(`UPDATE users SET role = ? WHERE id = ?`, [defaultRole, userId], (err) => {
+                    if (err) {
+                        console.error('Fehler beim Festlegen der Standardrolle für den Benutzer:', err);
+                        return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+                    } 
+                    res.redirect('/dashboard');
+                });
             });
-        }
+        });
     });
 });
 
+
+
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    db.get(`SELECT * FROM users WHERE username = ? AND password = ?`, [username, password], (err, row) => {
+    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, row) => {
         if (err) {
             console.error('Fehler beim Überprüfen der Anmeldeinformationen:', err);
-            res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-        } else if (!row) {
-            res.send('Falscher Benutzername oder Passwort');
-        } else {
-            req.session.userId = row.id;
-            res.redirect('/dashboard');
+            return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+        } 
+        if (!row) {
+            return res.send('Falscher Benutzername oder Passwort');
         }
+        // Vergleiche das eingegebene Passwort mit dem verschlüsselten Passwort aus der Datenbank
+        bcrypt.compare(password, row.password, (bcryptErr, result) => {
+            if (bcryptErr) {
+                console.error('Fehler beim Vergleichen der Passwörter:', bcryptErr);
+                return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+            }
+            if (!result) {
+                return res.send('Falscher Benutzername oder Passwort');
+            }
+            req.session.userId = row.id;
+            db.run(`UPDATE users SET last_login_timestamp = DATETIME('now') WHERE id = ?`, [row.id], (updateErr) => {
+                if (updateErr) {
+                    console.error('Fehler beim Aktualisieren der Anmeldezeit:', updateErr);
+                    return res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+                }
+                res.redirect('/dashboard');
+            });
+        });
     });
 });
+
+
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+})
 
 app.get('/servers', (req, res) => {
     db.all(`SELECT * FROM servers`, (err, rows) => {
@@ -431,31 +481,67 @@ app.post('/delete/:serverId', async (req, res) => {
     });
 });
 
-app.post('/servercommand/:containerId', isContainerOwner, (req, res) => {
+// Stoppen des Containers
+app.post('/server/stop/:containerId', isContainerOwner, (req, res) => {
     const containerId = req.params.containerId;
-    const command = req.body.command;
-console.log(command)
-    docker.getContainer(containerId).inspect((err, data) => {
-        if (err || !data.State.Running) {
-            res.status(400).send('Der Container ist nicht gestartet oder existiert nicht.');
-        } else {
-            const dockerCommand = spawn('docker', ['exec', '-i', containerId, 'bash', '-c', command]);
-            let output = '';
-
-            dockerCommand.stdout.on('data', (data) => {
-                output += data.toString();
-            });
-
-            dockerCommand.stderr.on('data', (data) => {
-                console.error(`Fehler beim Ausführen des Befehls: ${data}`);
-                output += data.toString();
-            });
-
-            dockerCommand.on('close', (code) => {
-                console.log(`Befehl ausgeführt mit Exit-Code ${code}`);
-                res.send(output); 
-            });
+    exec(`docker stop ${containerId}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Fehler beim Stoppen des Containers ${containerId}: ${error}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
         }
+        if (stderr) {
+            console.error(`Fehler beim Stoppen des Containers ${containerId}: ${stderr}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        console.log(`Container ${containerId} erfolgreich gestoppt.`);
+        res.status(200).send('Container erfolgreich gestoppt.');
+    });
+});
+
+// Starten des Containers
+app.post('/server/start/:containerId', isContainerOwner, (req, res) => {
+    const containerId = req.params.containerId;
+    exec(`docker start ${containerId}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Fehler beim Starten des Containers ${containerId}: ${error}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        if (stderr) {
+            console.error(`Fehler beim Starten des Containers ${containerId}: ${stderr}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        res.status(200).send('Container erfolgreich gestartet.');
+    });
+});
+
+
+app.post('/server/restart/:containerId', isContainerOwner, (req, res) => {
+    const containerId = req.params.containerId;
+    exec(`docker restart ${containerId}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Fehler beim restarten des Containers ${containerId}: ${error}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        if (stderr) {
+            console.error(`Fehler beim restarten des Containers ${containerId}: ${stderr}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        res.status(200).send('Container erfolgreich gerestarten.');
+    });
+});
+
+app.post('/server/kill/:containerId', isContainerOwner, (req, res) => {
+    const containerId = req.params.containerId;
+    exec(`docker kill ${containerId}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Fehler beim killen des Containers ${containerId}: ${error}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        if (stderr) {
+            console.error(`Fehler beim killen des Containers ${containerId}: ${stderr}`);
+            return res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        }
+        res.status(200).send('Container erfolgreich gerestarten.');
     });
 });
 
@@ -609,13 +695,22 @@ app.use(async (req, res, next) => {
     }
 });
 
+
 app.ws('/serverconsole/:containerId', (ws, req) => {
     const containerId = req.params.containerId;
-    const command = `docker logs -f ${containerId}`;
+    let buffer = ''; // Puffer für die letzten 200 Zeilen
+
+    // Befehl zum Anzeigen der Logs des Containers
+    const command = `docker logs --tail 200 -f ${containerId}`;
+
     const child = exec(command);
 
     child.stdout.on('data', (data) => {
-        ws.send(data.toString()); 
+        buffer += data.toString(); // Daten zum Puffer hinzufügen
+        const lines = buffer.split('\n'); // Zeilen aufteilen
+        const lastLines = lines.slice(Math.max(lines.length - 200, 0)); // Nur die letzten 200 Zeilen behalten
+        ws.send(lastLines.join('\n')); // Aktualisierte Zeilen an WebSocket senden
+        buffer = lastLines.join('\n'); // Puffer aktualisieren
     });
 
     child.stderr.on('data', (data) => {
@@ -625,8 +720,51 @@ app.ws('/serverconsole/:containerId', (ws, req) => {
     ws.on('close', () => {
         child.kill();
     });
+
+    ws.on('message', (command) => {
+        // Befehl vom Frontend empfangen und an den Container senden
+        exec(`docker exec ${containerId} sh -c "${command}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+        });
+    });
 });
 
+
+function checkAndDeleteExpiredServers() {
+    const currentTimestamp = Date.now();
+    db.all(`SELECT * FROM servers WHERE expiry_timestamp <= ?`, [currentTimestamp], async (err, servers) => {
+        if (err) {
+            console.error('Fehler beim Abrufen abgelaufener Server aus der Datenbank:', err);
+            return;
+        }
+        for (const server of servers) {
+            try {
+                await stopAndRemoveContainer(server.container_id);
+                db.run(`DELETE FROM servers WHERE id = ?`, [server.id], (err) => {
+                    if (err) {
+                        console.error('Fehler beim Löschen des abgelaufenen Servers aus der Datenbank:', err);
+                    } else {
+                        console.log(`Server ${server.id} erfolgreich gelöscht.`);
+                    }
+                });
+            } catch (error) {
+                console.error('Fehler beim Stoppen und Löschen des abgelaufenen Servers:', error);
+            }
+        }
+    });
+}
+
+setInterval(checkAndDeleteExpiredServers, 1 * 60 * 60 * 1000);
+
+checkAndDeleteExpiredServers();
 
 
 app.listen(3000, () => {

@@ -1,0 +1,15 @@
+{
+    "hello": "Hallo",
+    "dashboard": "Dashboard",
+    "profile": "Profil",
+    "admin": "Admin",
+    "logout": "Abmelden",
+    "name": "Name",
+    "ram": "RAM (MB)",
+    "disk": "Festplatte (MB)",
+    "vcores": "vCores",
+    "price": "Preis / Monat",
+    "expires_in": "Läuft ab in",
+    "manage": "Verwalten",
+    "claim_free_server": "Kostenlosen Server beanspruchen"
+}
