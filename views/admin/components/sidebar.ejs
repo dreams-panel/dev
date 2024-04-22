@@ -1,5 +1,5 @@
 <nav class="navbar bg-slate-900">
-    <div class="sidebar w-64 bg-gray-800 h-full fixed left-0 top-0 overflow-y-auto">
+    <div class="sidebar bg-gray-800 h-full fixed top-0 left-0 overflow-y-auto w-64">
         <ul class="py-4">
             <li>
                 <a href="/admin" class="link flex items-center px-6 py-2 text-gray-300">
@@ -19,6 +19,12 @@
                     Services
                 </a>
             </li>
+            <li>
+                <a href="/admin/eggs" class="link flex items-center px-6 py-2 text-gray-300">
+                    <i class="fas fa-cogs mr-3"></i>
+                    Eggs
+                </a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -28,11 +34,11 @@
         var currentUrl = window.location.pathname;
         var links = document.querySelectorAll('.sidebar a');
 
-        // Iteriere über alle Links in der Sidebar
+        // Iterate over all links in the sidebar
         links.forEach(function(link) {
-            // Überprüfe, ob der Link mit dem aktuellen Pfad übereinstimmt
+            // Check if the link matches the current path
             if (link.getAttribute('href') === currentUrl) {
-                link.parentNode.classList.add('active'); // Füge der Eltern-<li> die Klasse "active" hinzu
+                link.parentNode.classList.add('active'); // Add the "active" class to the parent <li>
             }
         });
     }

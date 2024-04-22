@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Egg Upload</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- head scripts -->
+    <%- include('./components/head.ejs') %>
     <style>
         /* Styles for the popup */
         .overlay {
@@ -50,82 +51,81 @@
 </head>
 
 <body class="bg-gray-200">
-    <!-- Top Navigation -->
-    <nav class="bg-gray-700 p-4">
-        <div class="container mx-auto">
-            <h1 class="text-white text-xl font-bold">Egg Upload</h1>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mx-auto mt-8 grid grid-cols-3 gap-8">
+    
         <!-- Sidebar -->
-        <div class="col-span-1">
-            <h2 class="text-lg font-bold mb-4 text-theme-color">Categories</h2>
-            <!-- Additional categories can be added here -->
-            <ul>
-                <li><a href="#" class="text-blue-500">Eggs</a></li>
-            </ul>
-        </div>
+        <%- include('./components/sidebar.ejs') %>
 
-        <!-- Main Section -->
-        <div class="col-span-2">
-            <h2 class="text-lg font-bold mb-4 text-theme-color">Eggs</h2>
 
-            <!-- List of Eggs -->
-            <div class="grid grid-cols-2 gap-4">
-                <% if (jsonData && jsonData['eggs-json']) { %>
-                    <% Object.keys(jsonData['eggs-json']).forEach(function(key) { %>
-                        <% var egg = jsonData['eggs-json'][key]; %>
-                        <% if (egg.content && egg.content.name) { %>
-                            <div class="bg-white p-4 border rounded-lg shadow">
-                                <h3 class="text-lg font-bold mb-2"><%= egg.content.name %></h3>
-                                <h2 class="text-lg mb-2"><%= egg.content.description %></h2>
-                            </div>
-                        <% } %>
-                    <% }); %>
-                <% } else { %>
-                    <li>No eggs exist</li>
-                <% } %>
+    <div class="main content ml-64">
+        <!-- Top Navigation -->
+        <nav class="bg-gray-700 p-4">
+            <div class="container mx-auto">
+                <h1 class="text-white text-xl font-bold">Egg Upload</h1>
             </div>
+        </nav>
 
-            <!-- Upload Button -->
-            <button id="uploadButton" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-8">Upload Egg</button>
+        <!-- Main Content -->
+        <div class="container mx-auto mt-8 grid grid-cols-3 gap-8">
 
-<!-- Popup for File Upload -->
-<div id="uploadPopup" class="overlay">
-    <div class="popup bg-white">
-        <button id="closeUploadPopup" class="absolute top-0 right-0 m-4 text-gray-600 hover:text-gray-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        <h2 class="text-lg font-bold mb-4">Upload Egg</h2>
-        <form action="/eggs/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="jsonFile" accept=".json" required>
-            <br>
-            <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-4">Upload</button>
-        </form>
-    </div>
-</div>
 
+            <!-- Main Section -->
+            <div class="col-span-2">
+                <h2 class="text-lg font-bold mb-4 text-theme-color">Eggs</h2>
+
+                <!-- List of Eggs -->
+                <div class="grid grid-cols-2 gap-4">
+                    <% if (jsonData && jsonData['eggs-json']) { %>
+                        <% Object.keys(jsonData['eggs-json']).forEach(function(key) { %>
+                            <% var egg = jsonData['eggs-json'][key]; %>
+                            <% if (egg.content && egg.content.name) { %>
+                                <div class="bg-white p-4 border rounded-lg shadow">
+                                    <h3 class="text-lg font-bold mb-2"><%= egg.content.name %></h3>
+                                    <h2 class="text-lg mb-2"><%= egg.content.description %></h2>
+                                </div>
+                            <% } %>
+                        <% }); %>
+                    <% } else { %>
+                        <li>No eggs exist</li>
+                    <% } %>
+                </div>
+
+                <!-- Upload Button -->
+                <button id="uploadButton" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-8">Upload Egg</button>
+
+    <!-- Popup for File Upload -->
+    <div id="uploadPopup" class="overlay">
+        <div class="popup bg-white">
+            <button id="closeUploadPopup" class="absolute top-0 right-0 m-4 text-gray-600 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-lg font-bold mb-4">Upload Egg</h2>
+            <form action="/eggs/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="jsonFile" accept=".json" required>
+                <br>
+                <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-4">Upload</button>
+            </form>
         </div>
     </div>
 
-    <script>
-        // Function to show/hide the upload popup
-        document.getElementById('uploadButton').addEventListener('click', function () {
-            var popup = document.getElementById('uploadPopup');
-            popup.style.display = 'flex'; // Show the popup
-        });
+            </div>
+        </div>
+
+        <script>
+            // Function to show/hide the upload popup
+            document.getElementById('uploadButton').addEventListener('click', function () {
+                var popup = document.getElementById('uploadPopup');
+                popup.style.display = 'flex'; // Show the popup
+            });
 
 
-        // Function to close the upload popup
-        document.getElementById('closeUploadPopup').addEventListener('click', function () {
-            var popup = document.getElementById('uploadPopup');
-            popup.style.display = 'none'; // Hide the popup
-        })
-    </script>
-</body>
-
+            // Function to close the upload popup
+            document.getElementById('closeUploadPopup').addEventListener('click', function () {
+                var popup = document.getElementById('uploadPopup');
+                popup.style.display = 'none'; // Hide the popup
+            })
+            </script>
+        </body>
+    </div>
 </html>
