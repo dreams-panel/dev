@@ -69,9 +69,11 @@
     <div class="container mx-auto mt-4 mb-4">
         <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
             <h2 class="text-white text-lg font-semibold mb-2"><%= server.name %></h2>
-            <div>
-                <button id="start" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Start</button>
-                <button id="stop" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded ml-3">Stop</button>
+            <div class="flex">
+                <button id="start" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">Start</button>
+                <button id="stop" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2">Stop</button>
+                <button id="restart" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded mr-2">Restart</button>
+                <button id="kill" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Kill</button>
             </div>
         </div>          
     </div>
