@@ -1,0 +1,47 @@
+<nav class="navbar bg-slate-900">
+    <div class="sidebar bg-gray-800 h-full fixed top-0 left-0 overflow-y-auto w-64">
+        <ul class="py-4">
+            <li>
+                <a href="/admin" class="link flex items-center px-6 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i class="fas fa-home mr-3"></i>
+                    Home
+                </a>
+            </li>
+            <li>
+                <a href="/users" class="link flex items-center px-6 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i class="fas fa-users mr-3"></i>
+                    Users
+                </a>
+            </li>
+            <li>
+                <a href="/services" class="link flex items-center px-6 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i class="fas fa-cogs mr-3"></i>
+                    Services
+                </a>
+            </li>
+            <li>
+                <a href="/admin/eggs" class="link flex items-center px-6 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i class="fas fa-egg mr-3"></i>
+                    Eggs
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<script>
+    function activateLink() {
+        var currentUrl = window.location.pathname;
+        var links = document.querySelectorAll('.sidebar a');
+
+        // Iterate over all links in the sidebar
+        links.forEach(function(link) {
+            // Check if the link matches the current path
+            if (link.getAttribute('href') === currentUrl) {
+                link.parentNode.classList.add('active'); // Add the "active" class to the parent <li>
+            }
+        });
+    }
+
+    window.onload = activateLink;
+</script>
