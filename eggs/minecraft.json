@@ -1,5 +1,6 @@
 {   "system": {
-    "version" : "1"},
+    "version" : "1"
+  },
     "name": "Minecraft",
     "version" : "1.0.0",
     "description": "Egg for Minecraft Server's",
