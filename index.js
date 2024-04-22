@@ -168,6 +168,48 @@ app.get('/admin', isAdmin, (req, res) => {
 })
 
 
+app.get('/admin/eggs', isAdmin, (req, res) => {
+    res.render('admin/eggs.ejs', {
+        settings: settings,
+        currency: settings.currency,
+        userId: req.session.userId,
+        username: req.session.username,
+        email: req.session.email,
+        jsonData: jsonData
+    } );
+})
+
+
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, './eggs/');
+    },
+    filename: (req, file, cb) => {
+      cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+    },
+  });
+  
+  const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'application/json') {
+        cb(null, true);
+      } else {
+        cb(new Error('Nur JSON-Dateien sind erlaubt!'));
+      }
+    },
+    limits: {
+      fileSize: 3 * 1024 * 1024, // 3 MB in Bytes umgerechnet
+    },
+  });
+  
+  // Endpunkt zum Hochladen von JSON-Dateien
+  app.post('/eggs/upload', isAdmin, upload.single('jsonFile'), (req, res, next) => {
+    res.redirect('/admin/eggs');
+  });
+
+
 
 async function getAvailablePort(startPort, endPort) {
     return new Promise((resolve, reject) => {
