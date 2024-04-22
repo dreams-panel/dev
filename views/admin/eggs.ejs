@@ -24,7 +24,15 @@
             background-color: white;
             padding: 20px;
             border-radius: 5px;
+            position: relative;
+
         }
+
+            /* Close button style */
+        #closeUploadPopup {
+            cursor: pointer;
+        }
+
 
         /* Gray theme */
         body {
@@ -84,17 +92,23 @@
             <!-- Upload Button -->
             <button id="uploadButton" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-8">Upload Egg</button>
 
-            <!-- Popup for File Upload -->
-            <div id="uploadPopup" class="overlay">
-                <div class="popup bg-white">
-                    <h2 class="text-lg font-bold mb-4">Upload Egg</h2>
-                    <form action="/eggs/upload" method="post" enctype="multipart/form-data">
-                        <input type="file" name="jsonFile" accept=".json" required>
-                        <br>
-                        <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-4">Upload</button>
-                    </form>
-                </div>
-            </div>
+<!-- Popup for File Upload -->
+<div id="uploadPopup" class="overlay">
+    <div class="popup bg-white">
+        <button id="closeUploadPopup" class="absolute top-0 right-0 m-4 text-gray-600 hover:text-gray-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <h2 class="text-lg font-bold mb-4">Upload Egg</h2>
+        <form action="/eggs/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="jsonFile" accept=".json" required>
+            <br>
+            <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded mt-4">Upload</button>
+        </form>
+    </div>
+</div>
+
         </div>
     </div>
 
@@ -104,6 +118,13 @@
             var popup = document.getElementById('uploadPopup');
             popup.style.display = 'flex'; // Show the popup
         });
+
+
+        // Function to close the upload popup
+        document.getElementById('closeUploadPopup').addEventListener('click', function () {
+            var popup = document.getElementById('uploadPopup');
+            popup.style.display = 'none'; // Hide the popup
+        })
     </script>
 </body>
 
