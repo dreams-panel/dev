@@ -8,9 +8,17 @@
 <%- include('./components/sidebar.ejs') %>
 <%- include('./components/topnav.ejs') %>
 
-<div class="content ml-64"> <!-- Adjust the margin according to your sidebar width -->
-    <!-- Dein Inhalt hier -->
+<div class="content ml-64">
+<div style="margin-bottom: 50px;"></div>
+    <% if (jsonData && jsonData['eggs-json']) { %>
+        <% Object.keys(jsonData['eggs-json']).forEach(egg => { %>
+            <% if (jsonData['eggs-json'][egg].content && jsonData['eggs-json'][egg].content.name) { %>
+                <li><%= jsonData['eggs-json'][egg].content.name %></li>
+            <% } %>
+        <% }); %>
+    <% } else { %>
+        <li>No eggs exists</li>
+    <% } %>
 </div>
-
 </body>
 </html>

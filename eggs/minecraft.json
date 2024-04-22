@@ -1,0 +1,5 @@
+{
+    "name": "Minecraft",
+    "image": "itzg/minecraft-server",
+    "run": "docker run -d -it --name ${serverName} -p ${port}:25565 --memory=${memoryLimit} --cpu-shares=${cpuShares} -e CREATE_CONSOLE_IN_PIPE=true -e EULA=true -e DISK=${diskMb}G itzg/minecraft-server"
+}

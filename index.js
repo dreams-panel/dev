@@ -9,8 +9,12 @@ const SQLiteStore = require('connect-sqlite3')(session);
 const settings = require('./settings.json');
 const Docker = require('dockerode');
 const docker = new Docker();
+const fs = require('fs');
 const { exec } = require('child_process');
+const { eggFunctions, loadEggFunctions, jsonData } = require('./eggs');
 const { spawn } = require('child_process');
+
+loadEggFunctions();
 
 const DB_PATH = path.join(__dirname, 'database.db');
 
@@ -153,37 +157,86 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/admin', isAdmin, (req, res) => {
-        res.render('admin/admin.ejs');
+        res.render('admin/admin.ejs', {
+            settings: settings,
+            currency: settings.currency,
+            userId: req.session.userId,
+            username: req.session.username,
+            email: req.session.email,
+            jsonData: jsonData
+        } );
 })
 
+
+
+async function getAvailablePort(startPort, endPort) {
+    return new Promise((resolve, reject) => {
+        exec(`docker ps -a --format "{{.Names}}\t{{.Ports}}"`, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            const lines = stdout.trim().split('\n');
+            const usedPorts = lines.flatMap(line => line.match(/(\d+)-(\d+):(\d+)/g) || []);
+            const availablePorts = Array.from({ length: endPort - startPort + 1 }, (_, i) => startPort + i)
+                .filter(port => !usedPorts.some(usedPort => usedPort.includes(`:${port}->`)));
+
+            if (availablePorts.length > 0) {
+                resolve(availablePorts[0]);
+            } else {
+                reject(new Error('Kein verfügbarer Port gefunden.'));
+            }
+        });
+    });
+}
+
+
+// Handler für die Route /freeserver
 app.get('/freeserver', async (req, res) => {
-    const serverName = 'free_minecraft_server_' + generateRandomString(8); 
-    const ramMb = 2024; 
-    const diskMb = 4024; 
-    const vCores = 4; 
-    const pricePerMonth = 0; 
-    const expiryTimestamp = Date.now() + 1 * 2 * 6 * 6 * 1000; 
+    const serverName = 'free_minecraft_server_' + generateRandomString(8);
+    const ramMb = 2024;
+    const diskMb = 4024;
+    const vCores = 4;
+    const pricePerMonth = 0;
+    const expiryTimestamp = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 Tage Ablaufzeit
     const ownerId = req.session.userId;
 
     try {
-        const containerId = await createMinecraftServerContainer(serverName, ownerId, ramMb, diskMb, vCores);
+        // Überprüfen, ob die Funktion createServerContainer für Minecraft vorhanden ist
+        const minecraftFunction = eggFunctions.find(egg => egg.eggName === 'minecraft');
 
-        db.run(`INSERT INTO servers (name, owner_id, ram_mb, disk_mb, vcores, price_per_month, expiry_timestamp, container_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [serverName, ownerId, ramMb, diskMb, vCores, pricePerMonth, expiryTimestamp, containerId],
-            (err) => {
-                if (err) {
-                    console.error('Fehler beim Hinzufügen des kostenlosen Servers zur Datenbank:', err);
-                    res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-                } else {
-                    res.send('Ein kostenloser Minecraft-Server für 30 Tage wurde erfolgreich erstellt und in der Datenbank eingetragen.');
+        if (minecraftFunction && minecraftFunction.createServerContainer) {
+            // Dynamisch den verfügbaren Port ermitteln
+            const startingPort = 25565;
+            const endPort = 65535;
+            const port = await getAvailablePort(startingPort, endPort);
+
+            // Erstellen des Servers mit der dynamisch erstellten Funktion
+            const containerId = await minecraftFunction.createServerContainer(serverName, ownerId, ramMb, diskMb, vCores, port);
+
+            // Füge den Server zur Datenbank hinzu
+            db.run(`INSERT INTO servers (name, owner_id, ram_mb, disk_mb, vcores, price_per_month, expiry_timestamp, container_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [serverName, ownerId, ramMb, diskMb, vCores, pricePerMonth, expiryTimestamp, containerId],
+                (err) => {
+                    if (err) {
+                        console.error('Fehler beim Hinzufügen des kostenlosen Servers zur Datenbank:', err);
+                        res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+                    } else {
+                        res.send('Ein kostenloser Minecraft-Server für 30 Tage wurde erfolgreich erstellt und in der Datenbank eingetragen.');
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            console.error('Funktion createServerContainer für Minecraft nicht gefunden.');
+            res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+        }
     } catch (error) {
         console.error('Fehler beim Erstellen des Minecraft-Servers:', error);
         res.send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
     }
 });
+
 
 
 function isContainerOwner(req, res, next) {
@@ -229,36 +282,6 @@ function generateRandomString(length) {
     return result;
 }
 
-async function createMinecraftServerContainer(serverName, ownerId, ramMb, diskMb, vCores) {
-    return new Promise((resolve, reject) => {
-        const memoryLimit = `${ramMb}M`;
-        const cpuShares = vCores * 1024;
-        let port = 25565;
-        exec(`docker ps -a --format "{{.Names}}\t{{.Ports}}"`, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            const containers = stdout.trim().split("\n");
-            containers.forEach(container => {
-                const [name, portsInfo] = container.split("\t");
-                const ports = portsInfo ? portsInfo.split(", ") : [];
-                if (ports.some(portInfo => portInfo.endsWith(`:${port}->${port}/tcp`))) {
-                    port++;
-                }
-            });
-            console.log(`Selected port: ${port}`);
-            exec(`docker run -d -it --name ${serverName} -p ${port}:25565 --memory=${memoryLimit} --cpu-shares=${cpuShares} --cpuset-cpus="0-${vCores - 1}" -e CREATE_CONSOLE_IN_PIPE=true -e EULA=true -e DISK=${diskMb}G itzg/minecraft-server`, (error, stdout, stderr) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                const containerId = stdout.trim();
-                resolve(containerId);
-            });
-        });
-    });
-}
 
 
 
@@ -659,19 +682,6 @@ app.post('/extend/:serverId', (req, res) => {
     });
 });
 
-async function checkAndPullMinecraftImage() {
-    return new Promise((resolve, reject) => {
-        exec('docker pull itzg/minecraft-server', (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            console.log('Minecraft-Image wurde überprüft und falls erforderlich heruntergeladen.');
-            resolve();
-        });
-    });
-}
-
 wss.on('connection', (ws, req) => {
     const containerId = req.url.split('/')[2]; 
     const command = `docker logs -f ${containerId}`;
@@ -692,20 +702,6 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-let minecraftImageChecked = false;
-
-app.use(async (req, res, next) => {
-    try {
-        if (!minecraftImageChecked) {
-            await checkAndPullMinecraftImage();
-            minecraftImageChecked = true;
-        }
-        next();
-    } catch (error) {
-        console.error('Fehler beim Überprüfen und Herunterladen des Minecraft-Images:', error);
-        res.status(500).send('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-    }
-});
 
 
 app.ws('/serverconsole/:containerId', (ws, req) => {
@@ -795,6 +791,6 @@ function isAdmin(req, res, next) {
 }
 
 
-app.listen(3000, () => {
-    console.log('Server läuft auf http://localhost:3000');
+app.listen(settings.port, () => {
+    console.log('Server is running on http://localhost:3000');
 });
