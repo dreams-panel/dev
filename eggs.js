@@ -89,11 +89,9 @@ directories.forEach(directory => {
 
         // Füge auch den Namen der Datei als separates Attribut hinzu
         jsonData[`${directoryName}-json`][file].name = parsedContent.name;
+        jsonData[`${directoryName}-json`][file].description = parsedContent.description;
     });
 });
-
-
-
 
 module.exports = { eggFunctions, loadEggFunctions, jsonData };
 
