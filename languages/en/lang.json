@@ -1,9 +1,9 @@
 {
     "hello": "Hallo",
     "dashboard": "Dashboard",
-    "profile": "Profil",
+    "profile": "Profile",
     "admin": "Admin",
-    "logout": "Abmelden",
+    "logout": "Logout",
     "name": "Name",
     "ram": "RAM (MB)",
     "disk": "Disk Space (MB)",
